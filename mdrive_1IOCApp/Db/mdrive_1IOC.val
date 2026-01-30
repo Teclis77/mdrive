@@ -1,0 +1,17 @@
+#################################################
+# ###                                       ### #
+# ### Epics values for	                    ### #
+# ### MDrive                                ### #
+# ###                                       ### #
+# ### author: D. Hampai - M. Montis         ### #
+# ###                                       ### #
+# ### Ref 1.0; 2025-09-17                   ### #
+#################################################
+#
+
+file db/mdrive_1IOC.db {
+    pattern { card, axis, ASYNPORT, MOT, EGU, homing, MRES, direct, onoff, ready }
+        { 1, 1 , "ip_x", "mdrive_x", mm, 1, 411, +, 1, 0 }
+#	{ 1, 1 , "ip_y", "mdrive_y", mm, 1, 411, +, 1, 1 }
+#	{ 1, 1 , "ip_z", "mdrive_z", mm, 3, 411, -, 1, 1 }
+}

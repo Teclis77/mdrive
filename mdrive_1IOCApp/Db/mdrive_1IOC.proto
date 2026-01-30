@@ -1,0 +1,63 @@
+#################################################
+# ###                                       ### #
+# ### Epics protocol for                    ### #
+# ### MDrive                                ### #
+# ###                                       ### #
+# ### author: D. Hampai - M. Montis         ### #
+# ###                                       ### #
+# ### Ref 1.0; 2025-09-17                   ### #
+#################################################
+
+###################
+# ### Globals ### #
+###################
+
+#Terminator = CR LF;
+#Terminator = LF;
+Terminator=CR;
+ReplyTimeout=1000;
+ReadTimeout=1000;
+#
+#       Protocols
+#
+##
+#       Discard Extra Inputs
+#	IF NECESSARY
+##
+ExtraInput = Ignore;
+getModel {
+	out "pr vr";
+	in "%*8c";
+	in "%s";
+}
+getError {
+	out "er=0";
+	in "%*3c%s";
+}
+#
+#	Motor Status
+#
+getStatus {
+        out "pr de";
+        in "%*8c";
+        in "%s";
+}
+setStatus {
+        out "de=%b";
+}
+getMoving {
+        out "pr mv";
+	in "%*8c";
+	in "%s";
+}
+getPos {
+	out "pr p";
+        in "%*8c";
+        in "%d";
+}
+#
+#	Moving
+#
+setInit {
+	out "hm \$1";
+}

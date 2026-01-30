@@ -1,0 +1,18 @@
+#################################################
+# ###                                       ### #
+# ### Epics database for	            ### #
+# ### MDrive		                    ### #
+# ###                                       ### #
+# ### author: D. Hampai - M. Montis         ### #
+# ###                                       ### #
+# ### Ref 1.0; 2025-09-17                   ### #
+#################################################
+#
+record(ai, "$(MOT):model") {
+#record(stringin, "$(MOT):model") {
+	field(DESC, "Device Version $(axis)")
+	field(SCAN, "Passive")
+	field(DTYP, "stream")
+	field(INP, "@mdrive_1IOC.proto getModel() $(ASYNPORT)")
+	field(PINI, "YES")
+}
