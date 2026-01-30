@@ -109,10 +109,10 @@ record(seq, "$(MOT)_$(card)_$(axis):evalmotor") {
         field(LNK1, "$(MOT)_$(card)_$(axis):motor")
         field(DO2, "1")
         field(LNK2, "$(MOT)_$(card)_$(axis):motor.PROC")
-        field(DLY2, "1")
+        field(DLY2, "0.5")
         field(DO3, "1")
         field(LNK3, "$(MOT)_$(card)_$(axis):err")
-	field(DLY4, "1")
+	field(DLY4, "0.5")
         field(DO4, "1")
 	field(LNK4, "$(MOT)_$(card)_$(axis):ask_request.PROC")
 }
@@ -171,7 +171,8 @@ record(calcout, "$(MOT)_$(card)_$(axis):pos") {
         field(EGU, "$(EGU)")
 	field(INPA, "$(MOT)_$(card)_$(axis):pos_mres CP")
 	field(INPB, "$(MOT)_$(card)_$(axis):mres")
-	field(CALC, "A/B")
+	field(INPC, "$(direct)")
+	field(CALC, "C*A/B")
         field(PREC, "3")
 }
 record(seq, "$(MOT)_$(card)_$(axis):evalpos") {
@@ -183,29 +184,114 @@ record(seq, "$(MOT)_$(card)_$(axis):evalpos") {
 	field(LNK2, "$(MOT)_$(card)_$(axis):pos.PROC PP")
 }
 #
-#	Initialization
+#	Homing
 #
-record(bo, "$(MOT)_$(card)_$(axis):reqinit") {
-        field(DESC, "Request Initialization $(card)_$(axis)")
-        field(FLNK, "$(MOT)_$(card)_$(axis):evalinit")
+record(bo, "$(MOT)_$(card)_$(axis):reqhome") {
+        field(DESC, "Request Homing $(card)_$(axis)")
+        field(FLNK, "$(MOT)_$(card)_$(axis):evalhome")
         field(ZNAM, "0")  # Label for state 0
         field(ONAM, "1")  # Label for state 1
 	field(PINI, "NO")
 }
-record(ai, "$(MOT)_$(card)_$(axis):init") {
-        field(DESC, "Initialization $(card)_$(axis)")
+record(ai, "$(MOT)_$(card)_$(axis):home") {
+        field(DESC, "Homing $(card)_$(axis)")
         field(SCAN, "Passive")
         field(DTYP, "stream")
-        field(INP, "@mdrive_1IOC.proto setInit($(homing)) $(ASYNPORT)")
+        field(INP, "@mdrive_1IOC.proto setHome($(homing)) $(ASYNPORT)")
         field(PINI, "NO")
 }
-record(seq, "$(MOT)_$(card)_$(axis):evalinit") {
+record(seq, "$(MOT)_$(card)_$(axis):evalhome") {
         field(DO0, "1")
         field(LNK0, "$(MOT)_$(card)_$(axis):err")
         field(DOL1, "1")
-        field(LNK1, "$(MOT)_$(card)_$(axis):init.PROC")
+        field(LNK1, "$(MOT)_$(card)_$(axis):home.PROC")
 }
-
+#
+#	MOVE ABSOLUTE
+#
+record(ao, "$(MOT)_$(card)_$(axis):setma") {
+	field(DESC, "Set Move Absolute $(card)_$(axis)")
+	field(FLNK, "$(MOT)_$(card)_$(axis):evalma")
+	field(PINI, "NO")
+}
+record(ao, "$(MOT)_$(card)_$(axis):ma") {
+	field(DESC, "Move Raw Absolute $(card)_$(axis)")
+	field(SCAN, "Passive")
+	field(DTYP, "stream")
+	field(OUT, "@mdrive_1IOC.proto setMovAbs() $(ASYNPORT)")
+	field(PINI, "NO")
+}
+record(calcout, "$(MOT)_$(card)_$(axis):ma_mres") {
+        field(DESC, "Move Raw Absolute $(card)_$(axis)")
+        field(EGU, "$(EGU)")
+	field(INPA, "$(MOT)_$(card)_$(axis):setma CP")
+	field(INPB, "$(MOT)_$(card)_$(axis):mres")
+	field(INPC, "$(direct)")
+	field(CALC, "A*B*C")
+        field(PREC, "3")
+}
+record(seq,"$(MOT)_$(card)_$(axis):evalma") {
+	field(DO0, "1")
+        field(LNK0, "$(MOT)_$(card)_$(axis):err")
+	field(DOL1, "$(MOT)_$(card)_$(axis):setma.VAL")
+        field(LNK1, "$(MOT)_$(card)_$(axis):ma_mres")
+	field(DO2, "1")
+	field(DLY2, "0.5")
+        field(LNK2, "$(MOT)_$(card)_$(axis):ma_mres.PROC")
+	field(DLY3, "0.5")
+	field(DOL3, "$(MOT)_$(card)_$(axis):ma_mres.VAL")
+	field(LNK3, "$(MOT)_$(card)_$(axis):ma")
+	field(DO4, "1")
+	field(LNK4, "$(MOT)_$(card)_$(axis):ma.PROC")
+	field(DO5, "1")
+        field(LNK5, "$(MOT)_$(card)_$(axis):err")
+        field(DLY6, "0.5")
+        field(DO6, "1")
+        field(LNK6, "$(MOT)_$(card)_$(axis):ask_request.PROC")
+}
+#
+#       MOVE RELATIVE
+#
+record(ao, "$(MOT)_$(card)_$(axis):setmr") {
+        field(DESC, "Set Move Relative $(card)_$(axis)")
+        field(FLNK, "$(MOT)_$(card)_$(axis):evalmr")
+        field(PINI, "NO")
+}
+record(ao, "$(MOT)_$(card)_$(axis):mr") {
+        field(DESC, "Move Raw Relative $(card)_$(axis)")
+        field(SCAN, "Passive")
+        field(DTYP, "stream")
+        field(OUT, "@mdrive_1IOC.proto setMovRel() $(ASYNPORT)")
+        field(PINI, "NO")
+}
+record(calcout, "$(MOT)_$(card)_$(axis):mr_mres") {
+        field(DESC, "Move Raw Relative $(card)_$(axis)")
+        field(EGU, "$(EGU)")
+        field(INPA, "$(MOT)_$(card)_$(axis):setmr CP")
+        field(INPB, "$(MOT)_$(card)_$(axis):mres")
+        field(INPC, "$(direct)")
+        field(CALC, "A*B*C")
+        field(PREC, "3")
+}
+record(seq,"$(MOT)_$(card)_$(axis):evalmr") {
+        field(DO0, "1")
+        field(LNK0, "$(MOT)_$(card)_$(axis):err")
+        field(DOL1, "$(MOT)_$(card)_$(axis):setmr.VAL")
+        field(LNK1, "$(MOT)_$(card)_$(axis):mr_mres")
+        field(DO2, "1")
+        field(DLY2, "0.5")
+        field(LNK2, "$(MOT)_$(card)_$(axis):mr_mres.PROC")
+        field(DLY3, "0.5")
+        field(DOL3, "$(MOT)_$(card)_$(axis):mr_mres.VAL")
+        field(LNK3, "$(MOT)_$(card)_$(axis):mr")
+        field(DO4, "1")
+        field(LNK4, "$(MOT)_$(card)_$(axis):mr.PROC")
+        field(DO5, "1")
+        field(LNK5, "$(MOT)_$(card)_$(axis):err")
+        field(DLY6, "0.5")
+        field(DO6, "1")
+        field(LNK6, "$(MOT)_$(card)_$(axis):ask_request.PROC")
+}
 
 
 

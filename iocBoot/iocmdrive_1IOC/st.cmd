@@ -18,11 +18,14 @@ mdrive_1IOC_registerRecordDeviceDriver pdbbase
 epicsEnvSet ("STREAM_PROTOCOL_PATH", "${TOP}/db")
 epicsEnvSet ("PORT_mdrive_x", "ip_x")
 epicsEnvSet ("ip_address_x", "100.100.0.23:503")
-#epicsEnvSet ("PORT_mdrive_y", "ip_y")
-#epicsEnvSet ("PORT_mdrive_z", "ip_z")
+epicsEnvSet ("PORT_mdrive_y", "ip_y")
+epicsEnvSet ("ip_address_y", "100.100.0.22:503")
+epicsEnvSet ("PORT_mdrive_z", "ip_z")
+epicsEnvSet ("ip_address_z", "100.100.0.21:503")
 
 #Z Axis
 #drvAsynIPPortConfigure($(PORT_mdrive_z), "100.100.0.21:503")
+drvAsynIPPortConfigure($(PORT_mdrive_z), $(ip_address_z))
 #asynOctetSetInputEos($(PORT_mdrive_z),0,"\n\r")
 #asynOctetSetOutputEos($(PORT_mdrive_z),0,"\n\r")
 #
@@ -31,6 +34,7 @@ epicsEnvSet ("ip_address_x", "100.100.0.23:503")
 #
 #Y Axis
 #drvAsynIPPortConfigure($(PORT_mdrive_y), "100.100.0.22:503")
+drvAsynIPPortConfigure($(PORT_mdrive_y), $(ip_address_y))
 #asynOctetSetInputEos($(PORT_mdrive_y),0,"\n\r")
 #asynOctetSetOutputEos($(PORT_mdrive_y),0,"\n\r")
 #
@@ -47,6 +51,10 @@ drvAsynIPPortConfigure($(PORT_mdrive_x), $(ip_address_x))
 
 asynSetTraceMask($(PORT_mdrive_x),-1,0x9);
 asynSetTraceIOMask($(PORT_mdrive_x),-1,0x2)
+asynSetTraceMask($(PORT_mdrive_y),-1,0x9);
+asynSetTraceIOMask($(PORT_mdrive_y),-1,0x2)
+asynSetTraceMask($(PORT_mdrive_z),-1,0x9);
+asynSetTraceIOMask($(PORT_mdrive_z),-1,0x2)
 
 ### Register all support components
 #dbLoadDatabase "dbd/mdrive_1IOC.dbd"

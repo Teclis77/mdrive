@@ -58,6 +58,12 @@ getPos {
 #
 #	Moving
 #
-setInit {
+setHome {
 	out "hm \$1";
+}
+setMovAbs {
+	out "ma %d";
+}
+setMovRel {
+        out "mr %d";
 }
