@@ -31,7 +31,8 @@ getModel {
 	in "%s";
 }
 getError {
-	out "er=0";
+#	out "er=0";
+	out "er";
 	in "%*3c%s";
 }
 #

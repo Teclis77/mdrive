@@ -8,7 +8,6 @@
 # ### Ref 1.0; 2025-09-17                   ### #
 #################################################
 #
-#record(ai, "$(MOT):model") {
 record(stringin, "$(MOT):model") {
 	field(DESC, "Device Version $(axis)")
 	field(SCAN, "Passive")
@@ -150,7 +149,6 @@ record(seq, "$(MOT)_$(card)_$(axis):evalmoving") {
 	field(DOL1, "1")
 	field(LNK1, "$(MOT)_$(card)_$(axis):ori_moving.PROC")
 }
-
 #
 #	Position
 #
@@ -292,38 +290,3 @@ record(seq,"$(MOT)_$(card)_$(axis):evalmr") {
         field(DO6, "1")
         field(LNK6, "$(MOT)_$(card)_$(axis):ask_request.PROC")
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
