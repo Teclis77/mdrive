@@ -46,7 +46,8 @@ resetError {
 getError {
 	out "pr er";	
 	in "%*c";
-	in "%d";
+	in "%s";
+#	in "%d";
 }
 getStatus {
         out "pr de";

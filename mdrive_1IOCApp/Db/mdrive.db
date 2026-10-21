@@ -15,8 +15,8 @@ record(stringin, "$(MOT):model") {
 	field(INP, "@mdrive.proto getModel() $(ASYNPORT)")
 	field(PINI, "YES")
 }
-#record(stringin, "$(MOT)_$(card)_$(axis):err") {
-record(longin, "$(MOT)_$(card)_$(axis):err") {
+record(stringin, "$(MOT)_$(card)_$(axis):err") {
+#record(longin, "$(MOT)_$(card)_$(axis):err") {
         field(DESC, "Get Error $(card)")
         field(SCAN, "Passive")
         field(DTYP, "stream")

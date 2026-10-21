@@ -21,9 +21,11 @@ program statusmdrive
 #include "motor_status.h"
 #include "res_utils.h"
 
-// Dichiarazione globale delle strutture MDrive
-MDriveStatus g_mdrive_status;
-TotalStatus  g_total_status;
+// Dichiarazione globale della variabile MotorStatus
+MotorStatus g_motor_status;
+char g_motor_status_char;
+TotalStatus g_motor_status_opt;
+char g_motor_status_opt_char;
 }%
 //
 option +r;
@@ -33,7 +35,7 @@ Num  Name             type    Associated
 2    polarity         int     {motor}_{card}_{axis}:polarity
 3    status_mode      int     {motor}_{card}_{axis}:status_mode
 4    ask_request      int     {motor}_{card}_{axis}:ask_request
-5    check_err_code   int     {motor}_{card}_{axis}:err
+5    check_err        string  {motor}_{card}_{axis}:err
 6    ms_status        int     {motor}_{card}_{axis}:ms_status       (PR DE)
 7    ms_status_opt    int     {motor}_{card}_{axis}:ms_status_opt   (PR MV)
 8    motor_status     int     {motor}_{card}_{axis}:motor_status
@@ -48,30 +50,30 @@ Num  Name             type    Associated
 17   real_vel         float   {motor}_{card}_{axis}:real_vel
 */
 // PV/CA
-float mres;           assign mres           to "{motor}_{card}_{axis}:mres";           monitor mres;
-int   polarity;       assign polarity       to "{motor}_{card}_{axis}:polarity";       monitor polarity;
-int   status_mode;    assign status_mode    to "{motor}_{card}_{axis}:status_mode";    monitor status_mode;
-int   ask_request;    assign ask_request    to "{motor}_{card}_{axis}:ask_request";    monitor ask_request;
-int   check_err_code; assign check_err_code to "{motor}_{card}_{axis}:err";            monitor check_err_code;
-int   ms_status;      assign ms_status      to "{motor}_{card}_{axis}:ms_status";      monitor ms_status;
-int   ms_status_opt;  assign ms_status_opt  to "{motor}_{card}_{axis}:ms_status_opt";  monitor ms_status_opt;
-int   motor_status;   assign motor_status   to "{motor}_{card}_{axis}:motor_status";   monitor motor_status;
-int   lim_pos;        assign lim_pos        to "{motor}_{card}_{axis}:limit_right";    monitor lim_pos;
-int   lim_neg;        assign lim_neg        to "{motor}_{card}_{axis}:limit_left";     monitor lim_neg;
-int   b_moving;       assign b_moving       to "{motor}_{card}_{axis}:moving";         monitor b_moving;
-int   reqpos;         assign reqpos         to "{motor}_{card}_{axis}:reqpos";         monitor reqpos;
-float act_pos;        assign act_pos        to "{motor}_{card}_{axis}:act_pos";        monitor act_pos;
-float pos;            assign pos            to "{motor}_{card}_{axis}:pos";            monitor pos;
-int   reqvel;         assign reqvel         to "{motor}_{card}_{axis}:reqvel";         monitor reqvel;
-float act_vel;        assign act_vel        to "{motor}_{card}_{axis}:act_vel";        monitor act_vel;
-float real_vel;       assign real_vel       to "{motor}_{card}_{axis}:real_vel";       monitor real_vel;
+float  mres;         assign mres         to "{motor}_{card}_{axis}:mres";         monitor mres;
+int    polarity;     assign polarity     to "{motor}_{card}_{axis}:polarity";     monitor polarity;
+int    status_mode;  assign status_mode  to "{motor}_{card}_{axis}:status_mode";  monitor status_mode;
+int    ask_request;  assign ask_request  to "{motor}_{card}_{axis}:ask_request";  monitor ask_request;
+string check_err;    assign check_err    to "{motor}_{card}_{axis}:err";           monitor check_err;
+int    ms_status;    assign ms_status    to "{motor}_{card}_{axis}:ms_status";    monitor ms_status;
+int    ms_status_opt; assign ms_status_opt to "{motor}_{card}_{axis}:ms_status_opt"; monitor ms_status_opt;
+int    motor_status; assign motor_status to "{motor}_{card}_{axis}:motor_status"; monitor motor_status;
+int    lim_pos;      assign lim_pos      to "{motor}_{card}_{axis}:limit_right";  monitor lim_pos;
+int    lim_neg;      assign lim_neg      to "{motor}_{card}_{axis}:limit_left";   monitor lim_neg;
+int    b_moving;     assign b_moving     to "{motor}_{card}_{axis}:moving";       monitor b_moving;
+int    reqpos;       assign reqpos       to "{motor}_{card}_{axis}:reqpos";       monitor reqpos;
+float  act_pos;      assign act_pos      to "{motor}_{card}_{axis}:act_pos";      monitor act_pos;
+float  pos;          assign pos          to "{motor}_{card}_{axis}:pos";          monitor pos;
+int    reqvel;       assign reqvel       to "{motor}_{card}_{axis}:reqvel";       monitor reqvel;
+float  act_vel;      assign act_vel      to "{motor}_{card}_{axis}:act_vel";      monitor act_vel;
+float  real_vel;     assign real_vel     to "{motor}_{card}_{axis}:real_vel";     monitor real_vel;
 
 // PV/CA .PROC - per triggerare i record Passive
-int check_err_proc;   assign check_err_proc   to "{motor}_{card}_{axis}:err.PROC";
-int ms_status_proc;   assign ms_status_proc   to "{motor}_{card}_{axis}:ms_status.PROC";
-int ms_status_opt_proc; assign ms_status_opt_proc to "{motor}_{card}_{axis}:ms_status_opt.PROC";
-int act_pos_proc;     assign act_pos_proc     to "{motor}_{card}_{axis}:act_pos.PROC";
-int act_vel_proc;     assign act_vel_proc     to "{motor}_{card}_{axis}:act_vel.PROC";
+int check_err_proc;      assign check_err_proc      to "{motor}_{card}_{axis}:err.PROC";
+int ms_status_proc;      assign ms_status_proc      to "{motor}_{card}_{axis}:ms_status.PROC";
+int ms_status_opt_proc;  assign ms_status_opt_proc  to "{motor}_{card}_{axis}:ms_status_opt.PROC";
+int act_pos_proc;        assign act_pos_proc        to "{motor}_{card}_{axis}:act_pos.PROC";
+int act_vel_proc;        assign act_vel_proc        to "{motor}_{card}_{axis}:act_vel.PROC";
 
 // Local Variables
 string lc_motor;
@@ -82,244 +84,243 @@ float  get_pol;
 
 //
 ss motor_snl {
-    state init {
-        when () {
-            strcpy(lc_motor, macValueGet("motor"));
-            strcpy(lc_card,  macValueGet("card"));
-            strcpy(lc_axis,  macValueGet("axis"));
-            status_mode = 0;
-            pvPut(status_mode, SYNC);
-            pvGet(mres,     SYNC);
-            pvGet(polarity, SYNC);
-            get_pol = 1.0;
-            printf("statusmdrive Init done: %s_%s_%s\n", lc_motor, lc_card, lc_axis);
-        } state idle
-    }
+        state init {
+                when () {
+                        strcpy(lc_motor, macValueGet("motor"));
+                        strcpy(lc_card,  macValueGet("card"));
+                        strcpy(lc_axis,  macValueGet("axis"));
+                        status_mode = 0;
+                        pvPut(status_mode, SYNC);
+                        pvGet(mres,     SYNC);
+                        pvGet(polarity, SYNC);
+                        get_pol = 1.0;
+                        printf("statusmdrive Init done: %s_%s_%s\n", lc_motor, lc_card, lc_axis);
+                } state idle
+        }
 
-    state idle {
-        when(status_mode == 1) {
-            printf("Status request for %s_%s_%s\n", lc_motor, lc_card, lc_axis);
-            epicsThreadSleep(1.0);
-        } state check_err
-        when(reqpos == 1) {
-            printf("Request Position %s_%s_%s\n", lc_motor, lc_card, lc_axis);
-            status_mode = 3;
-            pvPut(status_mode, SYNC);
-        } state check_err
-        when(reqvel == 1) {
-            printf("Request Velocity %s_%s_%s\n", lc_motor, lc_card, lc_axis);
-            status_mode = 4;
-            pvPut(status_mode, SYNC);
-        } state check_err
-        when() {
-            epicsThreadSleep(1.0);
-        } state idle
-    }
+        state idle {
+                when(status_mode == 1) {
+                        printf("Status request for %s_%s_%s\n", lc_motor, lc_card, lc_axis);
+                        epicsThreadSleep(1.0);
+                } state check_err
+                when(reqpos == 1) {
+                        printf("Request Position %s_%s_%s\n", lc_motor, lc_card, lc_axis);
+                        status_mode = 3;
+                        pvPut(status_mode, SYNC);
+                } state check_err
+                when(reqvel == 1) {
+                        printf("Request Velocity %s_%s_%s\n", lc_motor, lc_card, lc_axis);
+                        status_mode = 4;
+                        pvPut(status_mode, SYNC);
+                } state check_err
+                when() {
+                        epicsThreadSleep(1.0);
+                } state idle
+        }
 
-    //
-    // check_status: legge PR DE (drive enable) e aggiorna motor_status
-    // status_mode == 1
-    //
-    state check_status {
-        when () {
-            // Leggi PR DE tramite ms_status
-            ms_status_proc = 1;
-            pvPut(ms_status_proc, SYNC);
-            pvGet(ms_status, SYNC);
+        //
+        // check_status: legge PR DE (drive enable) e PR MV (moving)
+        // status_mode == 1
+        //
+        state check_status {
+                when () {
+                        // Leggi PR DE
+                        ms_status_proc = 1;
+                        pvPut(ms_status_proc, SYNC);
+                        pvGet(ms_status, SYNC);
 
-            // Leggi PR MV tramite ms_status_opt
-            ms_status_opt_proc = 1;
-            pvPut(ms_status_opt_proc, SYNC);
-            pvGet(ms_status_opt, SYNC);
+                        // Leggi PR MV
+                        ms_status_opt_proc = 1;
+                        pvPut(ms_status_opt_proc, SYNC);
+                        pvGet(ms_status_opt, SYNC);
 
-            // Popola la struttura con i valori letti
-            // check_err_code e' gia' aggiornato dal ciclo precedente
-            parse_mdrive_status(check_err_code, ms_status, ms_status_opt, &g_mdrive_status);
-            parse_total_status(&g_mdrive_status, &g_total_status);
+                        // Popola struttura MDrive con i valori numerici
+                        // check_err e' una stringa: convertiamo con atoi
+                        parse_mdrive_status(atoi(check_err), ms_status, ms_status_opt, &g_motor_status);
+                        parse_total_status(&g_motor_status, &g_motor_status_opt);
 
-            // Aggiorna i record EPICS
-            motor_status = g_mdrive_status.drive_enable;
-            pvPut(motor_status, SYNC);
+                        // Aggiorna record EPICS
+                        motor_status = g_motor_status.drive_enable;
+                        pvPut(motor_status, SYNC);
 
-            lim_pos = g_mdrive_status.limit_right;
-            pvPut(lim_pos, SYNC);
+                        lim_pos = g_motor_status.limit_right;
+                        pvPut(lim_pos, SYNC);
 
-            lim_neg = g_mdrive_status.limit_left;
-            pvPut(lim_neg, SYNC);
+                        lim_neg = g_motor_status.limit_left;
+                        pvPut(lim_neg, SYNC);
 
-            b_moving = g_mdrive_status.in_motion;
-            pvPut(b_moving, SYNC);
+                        b_moving = g_motor_status.in_motion;
+                        pvPut(b_moving, SYNC);
 
-            // Debug
-            sprintf(motor_name, "Motor%s", lc_axis);
-            print_mdrive_status(motor_name, &g_mdrive_status);
+                        // Debug
+                        sprintf(motor_name, "Motor%s", lc_axis);
+                        print_mdrive_status(motor_name, &g_motor_status);
 
-            status_mode = 2;
-            pvPut(status_mode, SYNC);
-        } state check_err
-    }
+                        status_mode = 2;
+                        pvPut(status_mode, SYNC);
+                } state check_err
+        }
 
-    //
-    // check_status_opt: legge PR MV (moving) e aggiorna b_moving
-    // status_mode == 2
-    //
-    state check_status_opt {
-        when() {
-            ms_status_opt_proc = 1;
-            pvPut(ms_status_opt_proc, SYNC);
-            pvGet(ms_status_opt, SYNC);
+        //
+        // check_status_opt: legge PR MV (moving) aggiornato
+        // status_mode == 2
+        //
+        state check_status_opt {
+                when() {
+                        ms_status_opt_proc = 1;
+                        pvPut(ms_status_opt_proc, SYNC);
+                        pvGet(ms_status_opt, SYNC);
 
-            b_moving = ms_status_opt;
-            pvPut(b_moving, SYNC);
+                        b_moving = ms_status_opt;
+                        pvPut(b_moving, SYNC);
 
-            printf("Is moving %s_%s_%s ? %d\n", lc_motor, lc_card, lc_axis, b_moving);
+                        printf("Is moving %s_%s_%s ? %d\n", lc_motor, lc_card, lc_axis, b_moving);
 
-            // Debug
-            print_total_status(&g_mdrive_status);
+                        print_total_status(&g_motor_status);
 
-            status_mode = 3;
-            pvPut(status_mode, SYNC);
-        } state check_err
-    }
+                        status_mode = 3;
+                        pvPut(status_mode, SYNC);
+                } state check_err
+        }
 
-    //
-    // check_position: legge PR P e aggiorna pos
-    // status_mode == 3
-    //
-    state check_position {
-        when() {
-            act_pos_proc = 1;
-            pvPut(act_pos_proc, SYNC);
-            pvGet(act_pos, SYNC);
+        //
+        // check_position: legge PR P e aggiorna pos
+        // status_mode == 3
+        //
+        state check_position {
+                when() {
+                        act_pos_proc = 1;
+                        pvPut(act_pos_proc, SYNC);
+                        pvGet(act_pos, SYNC);
 
-#            pos = mech_to_real(mres, act_pos, get_pol);
-            pos = mech_to_real(mres, act_pos, polarity);
-            printf("Position %s_%s_%s = %.3f\n", lc_motor, lc_card, lc_axis, pos);
-            pvPut(pos, SYNC);
+                        pos = mech_to_real(mres, act_pos, polarity);
+//                        pos = mech_to_real(mres, act_pos, get_pol);
+                        printf("Position %s_%s_%s = %.3f\n", lc_motor, lc_card, lc_axis, pos);
+                        pvPut(pos, SYNC);
 
-            reqpos = 0;
-            pvPut(reqpos, SYNC);
-            status_mode = 4;
-            pvPut(status_mode, SYNC);
-        } state check_err
-    }
+                        reqpos = 0;
+                        pvPut(reqpos, SYNC);
+                        status_mode = 4;
+                        pvPut(status_mode, SYNC);
+                } state check_err
+        }
 
-    //
-    // check_velocity: legge PR VM e aggiorna real_vel
-    // status_mode == 4
-    //
-    state check_velocity {
-        when() {
-            act_vel_proc = 1;
-            pvPut(act_vel_proc, SYNC);
-            pvGet(act_vel, SYNC);
+        //
+        // check_velocity: legge PR VM e aggiorna real_vel
+        // status_mode == 4
+        //
+        state check_velocity {
+                when() {
+                        act_vel_proc = 1;
+                        pvPut(act_vel_proc, SYNC);
+                        pvGet(act_vel, SYNC);
 
-            real_vel = mech_to_real(mres, act_vel, get_pol);
-            printf("Velocity %s_%s_%s = %.3f\n", lc_motor, lc_card, lc_axis, real_vel);
-            pvPut(real_vel, SYNC);
+                        real_vel = mech_to_real(mres, act_vel, get_pol);
+                        printf("Velocity %s_%s_%s = %.3f\n", lc_motor, lc_card, lc_axis, real_vel);
+                        pvPut(real_vel, SYNC);
 
-            reqvel = 0;
-            pvPut(reqvel, SYNC);
-            status_mode = 0;
-            pvPut(status_mode, SYNC);
-        } state check_err
-    }
+                        reqvel = 0;
+                        pvPut(reqvel, SYNC);
+                        status_mode = 0;
+                        pvPut(status_mode, SYNC);
+                } state check_err
+        }
 
-    //
-    // check_err: legge PR ER prima di ogni operazione
-    // Gestisce limit switch e stall
-    //
-    state check_err {
-        when(status_mode == 1) {
-            printf("Check Error [status] %s_%s_%s\n", lc_motor, lc_card, lc_axis);
-            check_err_proc = 1;
-            pvPut(check_err_proc, SYNC);
-            pvGet(check_err_code, SYNC);
-            printf("Error code: %d\n", check_err_code);
-            if (check_err_code == MDRIVE_ERR_LIMIT_PLUS) {
-                printf("WARNING: Plus limit switch tripped!\n");
-                lim_pos = 1;
-                pvPut(lim_pos, SYNC);
-            } else if (check_err_code == MDRIVE_ERR_LIMIT_MINUS) {
-                printf("WARNING: Minus limit switch tripped!\n");
-                lim_neg = 1;
-                pvPut(lim_neg, SYNC);
-            } else if (check_err_code == MDRIVE_ERR_STALL) {
-                printf("WARNING: Stall detected!\n");
-            }
-        } state check_status
-        when(status_mode == 2) {
-            printf("Check Error [status_opt] %s_%s_%s\n", lc_motor, lc_card, lc_axis);
-            check_err_proc = 1;
-            pvPut(check_err_proc, SYNC);
-            pvGet(check_err_code, SYNC);
-            printf("Error code: %d\n", check_err_code);
-            if (check_err_code == MDRIVE_ERR_LIMIT_PLUS) {
-                printf("WARNING: Plus limit switch tripped!\n");
-                lim_pos = 1;
-                pvPut(lim_pos, SYNC);
-            } else if (check_err_code == MDRIVE_ERR_LIMIT_MINUS) {
-                printf("WARNING: Minus limit switch tripped!\n");
-                lim_neg = 1;
-                pvPut(lim_neg, SYNC);
-            } else if (check_err_code == MDRIVE_ERR_STALL) {
-                printf("WARNING: Stall detected!\n");
-            }
-        } state check_status_opt
-        when(status_mode == 3) {
-            printf("Check Error [position] %s_%s_%s\n", lc_motor, lc_card, lc_axis);
-            check_err_proc = 1;
-            pvPut(check_err_proc, SYNC);
-            pvGet(check_err_code, SYNC);
-            printf("Error code: %d\n", check_err_code);
-            if (check_err_code == MDRIVE_ERR_LIMIT_PLUS) {
-                printf("WARNING: Plus limit switch tripped!\n");
-                lim_pos = 1;
-                pvPut(lim_pos, SYNC);
-            } else if (check_err_code == MDRIVE_ERR_LIMIT_MINUS) {
-                printf("WARNING: Minus limit switch tripped!\n");
-                lim_neg = 1;
-                pvPut(lim_neg, SYNC);
-            } else if (check_err_code == MDRIVE_ERR_STALL) {
-                printf("WARNING: Stall detected!\n");
-            }
-        } state check_position
-        when(status_mode == 4) {
-            printf("Check Error [velocity] %s_%s_%s\n", lc_motor, lc_card, lc_axis);
-            check_err_proc = 1;
-            pvPut(check_err_proc, SYNC);
-            pvGet(check_err_code, SYNC);
-            printf("Error code: %d\n", check_err_code);
-            if (check_err_code == MDRIVE_ERR_LIMIT_PLUS) {
-                printf("WARNING: Plus limit switch tripped!\n");
-                lim_pos = 1;
-                pvPut(lim_pos, SYNC);
-            } else if (check_err_code == MDRIVE_ERR_LIMIT_MINUS) {
-                printf("WARNING: Minus limit switch tripped!\n");
-                lim_neg = 1;
-                pvPut(lim_neg, SYNC);
-            } else if (check_err_code == MDRIVE_ERR_STALL) {
-                printf("WARNING: Stall detected!\n");
-            }
-        } state check_velocity
-        when() {
-            printf("Check Error [idle] %s_%s_%s\n", lc_motor, lc_card, lc_axis);
-            check_err_proc = 1;
-            pvPut(check_err_proc, SYNC);
-            pvGet(check_err_code, SYNC);
-            printf("Error code: %d\n", check_err_code);
-            if (check_err_code == MDRIVE_ERR_LIMIT_PLUS) {
-                printf("WARNING: Plus limit switch tripped!\n");
-                lim_pos = 1;
-                pvPut(lim_pos, SYNC);
-            } else if (check_err_code == MDRIVE_ERR_LIMIT_MINUS) {
-                printf("WARNING: Minus limit switch tripped!\n");
-                lim_neg = 1;
-                pvPut(lim_neg, SYNC);
-            } else if (check_err_code == MDRIVE_ERR_STALL) {
-                printf("WARNING: Stall detected!\n");
-            }
-        } state idle
-    }
+        //
+        // check_err: legge PR ER prima di ogni operazione
+        // Gestisce limit switch (83/84) e stall (86)
+        //
+        state check_err {
+                when(status_mode == 1) {
+                        printf("Check Error [status] %s_%s_%s\n", lc_motor, lc_card, lc_axis);
+                        check_err_proc = 1;
+                        pvPut(check_err_proc, SYNC);
+                        pvGet(check_err, SYNC);
+                        printf("Error code: %s\n", check_err);
+                        if (strcmp(check_err, "83") == 0) {
+                                printf("WARNING: Plus limit switch tripped!\n");
+                                lim_pos = 1;
+                                pvPut(lim_pos, SYNC);
+                        } else if (strcmp(check_err, "84") == 0) {
+                                printf("WARNING: Minus limit switch tripped!\n");
+                                lim_neg = 1;
+                                pvPut(lim_neg, SYNC);
+                        } else if (strcmp(check_err, "86") == 0) {
+                                printf("WARNING: Stall detected!\n");
+                        }
+                } state check_status
+                when(status_mode == 2) {
+                        printf("Check Error [status_opt] %s_%s_%s\n", lc_motor, lc_card, lc_axis);
+                        check_err_proc = 1;
+                        pvPut(check_err_proc, SYNC);
+                        pvGet(check_err, SYNC);
+                        printf("Error code: %s\n", check_err);
+                        if (strcmp(check_err, "83") == 0) {
+                                printf("WARNING: Plus limit switch tripped!\n");
+                                lim_pos = 1;
+                                pvPut(lim_pos, SYNC);
+                        } else if (strcmp(check_err, "84") == 0) {
+                                printf("WARNING: Minus limit switch tripped!\n");
+                                lim_neg = 1;
+                                pvPut(lim_neg, SYNC);
+                        } else if (strcmp(check_err, "86") == 0) {
+                                printf("WARNING: Stall detected!\n");
+                        }
+                } state check_status_opt
+                when(status_mode == 3) {
+                        printf("Check Error [position] %s_%s_%s\n", lc_motor, lc_card, lc_axis);
+                        check_err_proc = 1;
+                        pvPut(check_err_proc, SYNC);
+                        pvGet(check_err, SYNC);
+                        printf("Error code: %s\n", check_err);
+                        if (strcmp(check_err, "83") == 0) {
+                                printf("WARNING: Plus limit switch tripped!\n");
+                                lim_pos = 1;
+                                pvPut(lim_pos, SYNC);
+                        } else if (strcmp(check_err, "84") == 0) {
+                                printf("WARNING: Minus limit switch tripped!\n");
+                                lim_neg = 1;
+                                pvPut(lim_neg, SYNC);
+                        } else if (strcmp(check_err, "86") == 0) {
+                                printf("WARNING: Stall detected!\n");
+                        }
+                } state check_position
+                when(status_mode == 4) {
+                        printf("Check Error [velocity] %s_%s_%s\n", lc_motor, lc_card, lc_axis);
+                        check_err_proc = 1;
+                        pvPut(check_err_proc, SYNC);
+                        pvGet(check_err, SYNC);
+                        printf("Error code: %s\n", check_err);
+                        if (strcmp(check_err, "83") == 0) {
+                                printf("WARNING: Plus limit switch tripped!\n");
+                                lim_pos = 1;
+                                pvPut(lim_pos, SYNC);
+                        } else if (strcmp(check_err, "84") == 0) {
+                                printf("WARNING: Minus limit switch tripped!\n");
+                                lim_neg = 1;
+                                pvPut(lim_neg, SYNC);
+                        } else if (strcmp(check_err, "86") == 0) {
+                                printf("WARNING: Stall detected!\n");
+                        }
+                } state check_velocity
+                when() {
+                        printf("Check Error [idle] %s_%s_%s\n", lc_motor, lc_card, lc_axis);
+                        check_err_proc = 1;
+                        pvPut(check_err_proc, SYNC);
+                        pvGet(check_err, SYNC);
+                        printf("Error code: %s\n", check_err);
+                        if (strcmp(check_err, "83") == 0) {
+                                printf("WARNING: Plus limit switch tripped!\n");
+                                lim_pos = 1;
+                                pvPut(lim_pos, SYNC);
+                        } else if (strcmp(check_err, "84") == 0) {
+                                printf("WARNING: Minus limit switch tripped!\n");
+                                lim_neg = 1;
+                                pvPut(lim_neg, SYNC);
+                        } else if (strcmp(check_err, "86") == 0) {
+                                printf("WARNING: Stall detected!\n");
+                        }
+                } state idle
+        }
 }
 
