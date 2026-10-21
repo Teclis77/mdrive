@@ -42,6 +42,19 @@ mdrive_1IOC_SRCS_vxWorks += -nil-
 # Add support from base/src/vxWorks if needed
 #mdrive_1IOC_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
 
+# To build SNL programs, SNCSEQ must be defined
+# in the <top>/configure/RELEASE file
+
+ifneq ($(SNCSEQ),)
+	mdrive_1IOC_SNCFLAGS += +r
+	mdrive_1IOC_DBD += sncmdrive.dbd
+	mdrive_1IOC_SRCS += status.stt
+	mdrive_1IOC_SRCS += action.stt
+	mdrive_1IOC_SRCS += motor_status.c
+	mdrive_1IOC_SRCS += res_utils.c
+	mdrive_1IOC_LIBS += seq pv
+endif
+
 ifdef EPICS_QSRV_MAJOR_VERSION
     mdrive_1IOC_LIBS += qsrv
     mdrive_1IOC_LIBS += $(EPICS_BASE_PVA_CORE_LIBS)

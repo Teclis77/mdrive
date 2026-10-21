@@ -63,10 +63,16 @@ asynSetTraceIOMask($(PORT_mdrive_z),-1,0x2)
 ## Load record instances
 #dbLoadRecords("db/mdrive_1IOC.db","user=xlabsrv2")
 
-dbLoadTemplate("db/mdrive_1IOC.val")
+dbLoadTemplate("db/mdrive.val")
 
 cd "${TOP}/iocBoot/${IOC}"
 iocInit
 
 ## Start any sequence programs
 #seq sncxxx,"user=xlabsrv2"
+seq statusmdrive,"user=rxr,server=xlabsrv11,motor=mdrive_1,card=1,axis=1"
+seq actionmdrive,"user=rxr,server=xlabsrv11,motor=mdrive_1,card=1,axis=1"
+seq statusmdrive,"user=rxr,server=xlabsrv11,motor=mdrive_1,card=2,axis=1"
+seq actionmdrive,"user=rxr,server=xlabsrv11,motor=mdrive_1,card=2,axis=1"
+seq statusmdrive,"user=rxr,server=xlabsrv11,motor=mdrive_1,card=3,axis=1"
+seq actionmdrive,"user=rxr,server=xlabsrv11,motor=mdrive_1,card=3,axis=1"
