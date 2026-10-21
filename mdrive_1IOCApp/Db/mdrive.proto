@@ -5,16 +5,16 @@
 # ###                                       ### #
 # ### author: D. Hampai - M. Montis         ### #
 # ###                                       ### #
-# ### Ref 1.0; 2025-09-17                   ### #
+# ### Ref 2.0; 2026-10-18                   ### #
 #################################################
 
 ###################
 # ### Globals ### #
 ###################
 
-#Terminator = CR LF;
+Terminator = CR LF;
 #Terminator = LF;
-Terminator=CR;
+#Terminator=CR;
 ReplyTimeout=1000;
 ReadTimeout=1000;
 #
@@ -27,44 +27,68 @@ ReadTimeout=1000;
 ExtraInput = Ignore;
 getModel {
 	out "pr vr";
-	in "%*8c";
+	in "%*c";
+#	in ">pr vr";
+#	in "%*8c";
 	in "%s";
 }
-getError {
-#	out "er=0";
+#
+#	MDRIVE NEED A RESET
+#
+resetError {
 	out "er";
-	in "%*3c%s";
+	in "%*c";
 }
 #
-#	Motor Status
+#	MDRIVE NEED AN ERROR BUFFER
+#	TO READ LIMIT SWITCH
 #
+getError {
+	out "pr er";	
+	in "%*c";
+	in "%d";
+}
 getStatus {
         out "pr de";
-        in "%*8c";
-        in "%s";
+        in "%*c";
+        in "%d";
 }
 setStatus {
-        out "de=%b";
+        out "de %b";
+	in "%*c";
 }
 getMoving {
         out "pr mv";
-	in "%*8c";
-	in "%s";
+	in "%*c";
+	in "%d";
 }
 getPos {
 	out "pr p";
-        in "%*8c";
+        in "%*c";
         in "%d";
 }
-#
-#	Moving
-#
 setHome {
 	out "hm \$1";
+	in "%*c";
 }
 setMovAbs {
 	out "ma %d";
+	in "%*c";
 }
 setMovRel {
         out "mr %d";
+	in "%*c";
+}
+setStop {
+	out "sl 0";
+	in "%*c";
+}
+setVel {
+	out "vm %f";
+	in "%*c";
+}
+getVel {
+	out "pr vm";
+	in "%*c";
+	in "%f";
 }

@@ -1,0 +1,211 @@
+#################################################
+# ###                                       ### #
+# ### Epics database for	            ### #
+# ### MDrive		                    ### #
+# ###                                       ### #
+# ### author: D. Hampai - M. Montis         ### #
+# ###                                       ### #
+# ### Ref 2.0; 2026-10-18                   ### #
+#################################################
+#
+record(stringin, "$(MOT):model") {
+	field(DESC, "Device Version $(axis)")
+	field(SCAN, "Passive")
+	field(DTYP, "stream")
+	field(INP, "@mdrive.proto getModel() $(ASYNPORT)")
+	field(PINI, "YES")
+}
+#record(stringin, "$(MOT)_$(card)_$(axis):err") {
+record(longin, "$(MOT)_$(card)_$(axis):err") {
+        field(DESC, "Get Error $(card)")
+        field(SCAN, "Passive")
+        field(DTYP, "stream")
+        field(INP, "@mdrive.proto getError() $(ASYNPORT)")
+        field(PINI, "YES")
+}
+record(ao, "$(MOT)_$(card)_$(axis):reset") {
+	field(DESC, "Reset Error")
+	field(SCAN, "Passive")
+	field(DTYP, "stream")
+	field(OUT, "@mdrive.proto resetError() $(ASYNPORT)")
+	field(PINI, "NO")
+}
+record(stringin, "$(MOT)_$(card)_$(axis):busy") {
+        field(DESC, "Busy  $(card)_$(axis) - (0=busy, 1=ready)")
+        field(SCAN, "Passive")
+        field(VAL, "1")
+        field(PINI, "YES")
+}
+record(ao, "$(MOT)_$(card)_$(axis):mres") {
+	field(DESC, "Conversion in $(EGU)")
+	field(VAL, "$(MRES)")
+	field(PINI, "YES")
+}
+record(stringout, "$(MOT)_$(card)_$(axis):egu") {
+	field(DESC, "Unity")
+	field(VAL, "$(EGU)")
+	field(PINI, "YES")
+}
+record(ao, "$(MOT)_$(card)_$(axis):polarity") {
+	field(DESC, "Motor Direction")
+	field(VAL, "$(direct)")
+	field(PINI, "YES")
+}
+record(bo, "$(MOT)_$(card)_$(axis):stop") {
+	field(DESC, "Emergency Stop")
+	field(SCAN, "Passive")
+	field(DTYP, "stream")
+	field(OUT, "@mdrive.proto setStop($(axis)) $(ASYNPORT)")
+	field(PINI, "NO")
+}
+#
+#       ON/OFF Motor
+#
+record(bo, "$(MOT)_$(card)_$(axis):reqmotor") {
+	field(DESC, "Request On/Off Motor $(card)_$(axis)")
+	field(ZNAM, "0")  # Label for state 0
+	field(ONAM, "1")  # Label for state 1
+}
+record(bo, "$(MOT)_$(card)_$(axis):motor") {
+	field(DESC, "On/Off Motor $(card)_$(axis)")
+	field(SCAN, "Passive")
+	field(DTYP, "stream")
+	field(OUT, "@mdrive_1IOC.proto setStatus($(axis)) $(ASYNPORT)")
+	field(PINI, "NO")
+}
+record(ai, "$(MOT)_$(card)_$(axis):motor_status") {
+	field(DESC, "Motor On?")
+	field(PINI, "NO")
+}
+#
+#	Status
+#
+record(ai, "$(MOT)_$(card)_$(axis):status_mode") {
+	field(DESC, "SNL status IOC")
+	field(VAL, "0")
+	field(PINI, "YES")
+}
+record(bo, "$(MOT)_$(card)_$(axis):ask_request") {
+	field(DESC, "Request Infos from IOC")
+	field(SCAN, "Passive")
+	field(VAL, "1")
+	field(PINI, "YES")
+	field(OUT, "$(MOT)_$(card)_$(axis):status_mode.VAL PP")
+}
+#
+record(longin, "$(MOT)_$(card)_$(axis):ms_status") {
+	field(DESC, "Status Motor")
+	field(SCAN, "Passive")
+	field(DTYP, "stream")
+	field(INP, "@mdrive.proto getStatus($(axis)) $(ASYNPORT)")
+	field(PINI, "NO") 
+}
+record(longin, "$(MOT)_$(card)_$(axis):ms_status_opt") {
+	field(DESC, "Status Motor Supplementary")
+	field(SCAN, "Passive")
+	field(DTYP, "stream")
+	field(INP, "@mdrive.proto getMoving() $(ASYNPORT)")
+	field(PINI, "NO")
+}
+# Limits
+record(bi, "$(MOT)_$(card)_$(axis):limit_right") {
+	field(DESC, "Right (+) travel limit")
+	field(ZNAM, "Not tripped")
+	field(ONAM, "TRIPPED!!")
+	field(ZSV, "NO_ALARM")      # Severità quando il bit è 0 (non trippato)
+	field(OSV, "MAJOR")         # Severità quando il bit è 1 (trippato)
+}
+record(bi, "$(MOT)_$(card)_$(axis):limit_left") {
+	field(DESC, "Left (-) travel limit")
+	field(ZNAM, "Not tripped")
+	field(ONAM, "TRIPPED!!")
+	field(ZSV, "NO_ALARM")      # Severità quando il bit è 0 (non trippato)
+	field(OSV, "MAJOR")         # Severità quando il bit è 1 (trippato)
+}
+# Moving
+record(bi,  "$(MOT)_$(card)_$(axis):moving") {
+        field(DESC, "Motor is moving?")
+        field(ZNAM, "Ready")
+        field(ONAM, "Moving")
+}
+# Position
+record(bo, "$(MOT)_$(card)_$(axis):reqpos") {
+	field(DESC, "Request Position")
+}
+record(ai, "$(MOT)_$(card)_$(axis):act_pos") {
+	field(DESC, "Machine Position")
+	field(SCAN, "Passive")
+	field(DTYP, "stream")
+	field(INP, "@mdrive.proto getPos($(axis)) $(ASYNPORT)")
+	field(PINI, "NO")
+}
+record(ai, "$(MOT)_$(card)_$(axis):pos") {
+	field(DESC, "Actual Position")
+	field(SCAN, "Passive")
+	field(PINI, "NO")
+}
+# Home
+record(bo, "$(MOT)_$(card)_$(axis):reqhome") {
+	field(DESC, "Request Homing $(card)_$(axis)")
+	field(ZNAM, "0")  # Label for state 0
+	field(ONAM, "1")  # Label for state 1
+	field(PINI, "NO")
+}
+record(ai, "$(MOT)_$(card)_$(axis):home") {
+        field(DESC, "Homing $(card)_$(axis)")
+        field(SCAN, "Passive")
+        field(DTYP, "stream")
+        field(INP, "@mdrive.proto setHome($(axis),$(homing)) $(ASYNPORT)")
+        field(PINI, "NO")
+}
+# Move Absolute
+record(ao, "$(MOT)_$(card)_$(axis):setma") {
+	field(DESC, "Set Move Absolute $(card)_$(axis)")
+	field(PINI, "NO")
+}
+record(ao, "$(MOT)_$(card)_$(axis):ma") {
+	field(DESC, "Move Absolute $(card)_$(axis)")
+	field(SCAN, "Passive")
+	field(DTYP, "stream")
+	field(OUT, "@mdrive.proto setMovAbs($(axis)) $(ASYNPORT)")
+	field(PINI, "NO")
+}
+# Move Relative
+record(ao, "$(MOT)_$(card)_$(axis):setmr") {
+        field(DESC, "Set Move Relative $(card)_$(axis)")
+        field(PINI, "NO")
+}
+record(ao, "$(MOT)_$(card)_$(axis):mr") {
+        field(DESC, "Move Relative $(card)_$(axis)")
+        field(SCAN, "Passive")
+        field(DTYP, "stream")
+        field(OUT, "@mdrive.proto setMovRel($(axis)) $(ASYNPORT)")
+        field(PINI, "NO")
+}
+# Velocity
+record(ao, "$(MOT)_$(card)_$(axis):setve") {
+	field(DESC, "Set Velocity $(card)_$(axis)")
+	field(PINI, "NO")
+}
+record(ao, "$(MOT)_$(card)_$(axis):vel") {
+	field(DESC, "Velocity $(card)_$(axis)")
+	field(SCAN, "Passive")
+	field(DTYP, "stream")
+	field(OUT, "@mdrive.proto setVel($(axis)) $(ASYNPORT)")
+	field(PINI, "NO")
+}
+record(bo, "$(MOT)_$(card)_$(axis):reqvel") {
+	field(DESC, "Request Velocity")
+}
+record(ai, "$(MOT)_$(card)_$(axis):act_vel") {
+	field(DESC, "Machine Velocity")
+	field(SCAN, "Passive")
+	field(DTYP, "stream")
+	field(INP, "@mdrive.proto getVel($(axis)) $(ASYNPORT)")
+	field(PINI, "NO")
+}
+record(ai, "$(MOT)_$(card)_$(axis):real_vel") {
+	field(DESC, "Actual Velocity")
+	field(SCAN, "Passive")
+	field(PINI, "NO")
+}

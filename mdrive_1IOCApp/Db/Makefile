@@ -12,9 +12,9 @@ include $(TOP)/configure/CONFIG
 # databases, templates, substitutions like this
 #DB += xxx.db
 
-DB += mdrive_1IOC.proto
-DB += mdrive_1IOC.db
-DB += mdrive_1IOC.val
+DB += mdrive.proto
+DB += mdrive.db
+DB += mdrive.val
 
 #----------------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add
